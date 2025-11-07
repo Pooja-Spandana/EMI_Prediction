@@ -3,6 +3,7 @@ numpy>=1.26,<3.0
 scipy>=1.11,<2.0
 plotly>=5.19,<6.0
 matplotlib>=3.8,<3.10
+seaborn>=0.13.0,<0.14.0
 shap>=0.44,<0.47
 tqdm>=4.66,<5.0
 scikit-learn>=1.4,<1.6
