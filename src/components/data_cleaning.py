@@ -163,7 +163,7 @@ class DataCleaner:
                 raise FileNotFoundError(f"Ingested data not found at {ingested_path}. Please run data_ingestion.py first.")
             
             logging.info(f"Loading ingested data from {ingested_path}")
-            df = pd.read_csv(ingested_path)
+            df = pd.read_csv(ingested_path, low_memory=False)
             logging.info(f"Loaded ingested data | Shape: {df.shape}")
             
             return df

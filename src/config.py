@@ -43,3 +43,10 @@ TEST_FRACTION = 0.50     # fraction of temp -> test (kept for clarity)
 
 # Random seed
 RANDOM_STATE = 42
+
+# Best parameters directory
+BEST_PARAMS_DIR = "artifacts/best_params"
+
+# Model registration thresholds
+CLASSIFICATION_ACCURACY_THRESHOLD = 0.90  # Minimum 90% accuracy to register
+REGRESSION_RMSE_THRESHOLD = 2000  # Maximum 2000 INR RMSE to register
