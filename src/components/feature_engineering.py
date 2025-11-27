@@ -13,7 +13,7 @@ from src.config import (
     RANDOM_STATE, ARTIFACTS_DIR
 )
 
-from src.utils import save_csv
+
 from src.logger import logging
 from src.config import PROCESSED_DATA_DIR
 from src.exception import CustomException
@@ -156,7 +156,11 @@ class FeatureEngineer:
     # ----------------------------------------------------------
     # 6. FULL PIPELINE CALL (optional helper)
     # ----------------------------------------------------------
+    # ----------------------------------------------------------
+    # 6. FULL PIPELINE CALL (optional helper)
+    # ----------------------------------------------------------
     def run(self, df: pd.DataFrame):
+        from src.utils import save_csv
         logging.info("Running full Feature Engineering pipeline...")
 
         # 1. create features
@@ -259,6 +263,7 @@ class FeatureEngineer:
 
 if __name__ == "__main__":
     try:
+        from src.utils import save_csv
         fe = FeatureEngineer()
         
         # Load cleaned data

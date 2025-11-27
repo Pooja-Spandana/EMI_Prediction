@@ -207,7 +207,9 @@ marimo/_lsp/
 __marimo__/
 
 # Data
-/Data/
-/artifacts/
+/Data/Raw/emi_prediction_dataset.csv
+/Data/Interim/
+/Data/Processed/
 
+/artifacts/
 /logs/
