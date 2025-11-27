@@ -54,18 +54,18 @@ def load_data():
         df = None
         source = None
         
-        # Always load Sample Data from GitHub (Cloud Compatible)
-        github_raw_url = "https://raw.githubusercontent.com/Pooja-Spandana/EMI_Prediction/main/Data/Raw/sample_data.csv"
+        # Load Full Dataset from DagsHub (DVC Tracked)
+        dagshub_raw_url = "https://dagshub.com/Pooja-Spandana/EMI_Prediction/raw/main/Data/Raw/emi_prediction_dataset.csv"
         try:
-            df = pd.read_csv(github_raw_url)
-            source = "Sample Data (GitHub)"
-        except Exception as github_error:
-            # Fallback to local if GitHub fails (CDN caching or network issues)
-            if Path("Data/Raw/sample_data.csv").exists():
-                df = pd.read_csv("Data/Raw/sample_data.csv")
-                source = "Sample Data (Local Fallback)"
+            df = pd.read_csv(dagshub_raw_url)
+            source = "Full Dataset (DagsHub/DVC)"
+        except Exception as dagshub_error:
+            # Fallback to local if DagsHub fails
+            if Path("Data/Raw/emi_prediction_dataset.csv").exists():
+                df = pd.read_csv("Data/Raw/emi_prediction_dataset.csv")
+                source = "Full Dataset (Local Fallback)"
             else:
-                return None, f"Error loading from GitHub: {str(github_error)}"
+                return None, f"Error loading from DagsHub: {str(dagshub_error)}"
             
         return df, source
     except Exception as e:
@@ -76,7 +76,8 @@ with st.spinner("Loading dataset..."):
 
 # Add Download Button and Instructions
 st.sidebar.markdown("### 📥 Get Raw Data")
-st.sidebar.link_button("Download Raw Dataset", "https://drive.google.com/file/d/1C7tcEdnRIlxwIsFnsN6F0jkpU1FRlieS/view")
+dagshub_url = "https://dagshub.com/Pooja-Spandana/EMI_Prediction/raw/main/Data/Raw/emi_prediction_dataset.csv"
+st.sidebar.link_button("Download Raw Dataset", dagshub_url)
 
 st.sidebar.markdown("""
     1. **Download** the raw dataset from the link above.
@@ -86,12 +87,11 @@ st.sidebar.markdown("""
     5. **Run Feature Engineering**: ```python src/components/feature_engineering.py```
     """)
     
-st.markdown("#### 📄 Raw Data Preview (from GitHub)")
+st.markdown("#### 📄 Raw Data Preview (Top 10 Rows)")
 try:
-    github_raw_url = "https://raw.githubusercontent.com/Pooja-Spandana/EMI_Prediction/main/Data/Raw/sample_data.csv"
-    df_raw_preview = pd.read_csv(github_raw_url)
-    st.dataframe(df_raw_preview.head(10), width='stretch')
-    st.caption(f"Showing 10 rows from {github_raw_url}")
+    if df is not None:
+        st.dataframe(df.head(10), width='stretch')
+        st.caption(f"Showing top 10 rows from {source}")
 except Exception as e:
     st.warning(f"Could not load raw data preview: {e}")
 

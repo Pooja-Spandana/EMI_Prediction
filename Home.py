@@ -18,6 +18,7 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+
 # Custom CSS for better styling
 st.markdown("""
     <style>
@@ -53,15 +54,11 @@ st.markdown('<div class="sub-header">Intelligent Financial Risk Assessment with 
 
 # Introduction
 st.markdown("---")
-col1, col2, col3 = st.columns([1, 2, 1])
-with col2:
-    st.markdown("""
-    ### Welcome to the EMI Prediction Platform
-    
-    This application leverages advanced machine learning models to provide accurate EMI eligibility 
-    predictions and maximum EMI amount calculations. Built with state-of-the-art algorithms and 
-    integrated with MLflow for model tracking and management.
-    """)
+
+st.markdown("""
+This application leverages advanced machine learning models to provide accurate EMI eligibility predictions and maximum EMI amount calculations. 
+Built with state-of-the-art algorithms and integrated with MLflow for model tracking and management.
+""")
 
 st.markdown("---")
 
@@ -89,7 +86,6 @@ with col1:
         <ul>
             <li>Feature distributions and statistics</li>
             <li>Correlation analysis</li>
-            <li>Interactive filtering and slicing</li>
         </ul>
     </div>
     """, unsafe_allow_html=True)

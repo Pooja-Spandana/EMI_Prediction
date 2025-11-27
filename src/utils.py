@@ -4,6 +4,11 @@ import pandas as pd
 from pathlib import Path
 from exception import CustomException
 import sys
+from dotenv import load_dotenv
+import os
+
+# Load environment variables
+load_dotenv()
 
 # Function to ensures the parent directory for a given file path exists
 def ensure_parent_dir(path):
@@ -132,51 +137,116 @@ def load_models_local():
 def load_models_from_mlflow():
     """
     Load models and preprocessor from MLflow Model Registry.
-    Used for Streamlit Cloud deployment.
+    Tries multiple stages: Production -> Staging -> Latest version.
+    Used for Streamlit Cloud deployment and DagsHub integration.
     
     Returns:
         tuple: (regressor, classifier, preprocessor)
     """
     import mlflow
+    import mlflow.sklearn  # Import sklearn flavor to get native model with predict_proba
     import os
     import streamlit as st
+    import joblib
     
     try:
-        # Set MLflow tracking URI
-        mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI"))
+        # Set MLflow tracking URI from environment variable
+        tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
+        if not tracking_uri:
+            raise ValueError("MLFLOW_TRACKING_URI environment variable not set")
         
-        # Load registered models from Production stage
-        regressor = mlflow.pyfunc.load_model("models:/EMI_Regressor/Production")
-        classifier = mlflow.pyfunc.load_model("models:/EMI_Classifier/Production")
+        mlflow.set_tracking_uri(tracking_uri)
+        logging.info(f"MLflow tracking URI set to: {tracking_uri}")
+        
+        # Try to load models from different stages
+        stages_to_try = ["Production", "Staging"]
+        regressor = None
+        classifier = None
+        
+        # 1. Try specific stages first
+        for stage in stages_to_try:
+            try:
+                logging.info(f"Attempting to load models from stage: {stage}")
+                # Use sklearn loader to get predict_proba support
+                regressor = mlflow.sklearn.load_model(f"models:/emi_max_monthly_predictor/{stage}")
+                classifier = mlflow.sklearn.load_model(f"models:/emi_eligibility_classifier/{stage}")
+                logging.info(f"✓ Models loaded from {stage} stage")
+                break
+            except Exception:
+                continue
+        
+        # 2. If stages failed, try loading the latest version
+        if regressor is None or classifier is None:
+            logging.info("Could not load from stages, attempting to load latest versions...")
+            client = mlflow.tracking.MlflowClient()
+            
+            try:
+                # Get latest version for Regressor
+                reg_versions = client.get_latest_versions("emi_max_monthly_predictor", stages=["None"])
+                if not reg_versions:
+                    raise Exception("No versions found for emi_max_monthly_predictor")
+                reg_version = reg_versions[0].version
+                regressor = mlflow.sklearn.load_model(f"models:/emi_max_monthly_predictor/{reg_version}")
+                logging.info(f"✓ Regressor loaded from version {reg_version}")
+
+                # Get latest version for Classifier
+                cls_versions = client.get_latest_versions("emi_eligibility_classifier", stages=["None"])
+                if not cls_versions:
+                    raise Exception("No versions found for emi_eligibility_classifier")
+                cls_version = cls_versions[0].version
+                classifier = mlflow.sklearn.load_model(f"models:/emi_eligibility_classifier/{cls_version}")
+                logging.info(f"✓ Classifier loaded from version {cls_version}")
+                
+            except Exception as e:
+                raise Exception(f"Failed to load latest versions: {e}")
+        
+        if regressor is None or classifier is None:
+            raise Exception("Could not load models from any stage or version")
         
         # Load preprocessor from the regressor's run artifacts
-        # Get the run_id from the registered model
-        client = mlflow.tracking.MlflowClient()
-        reg_model = client.get_registered_model("EMI_Regressor")
-        latest_version = reg_model.latest_versions[0]
-        run_id = latest_version.run_id
+        # We need the run_id from the loaded model to find the preprocessor
+        try:
+            # We can get run_id from the model metadata if available, or query registry again
+            # Let's query registry for the version we just loaded
+            client = mlflow.tracking.MlflowClient()
+            reg_model_info = client.get_latest_versions("emi_max_monthly_predictor", stages=["None", "Production", "Staging"])
+            # Sort by version to get the one we likely loaded (simplification)
+            latest_reg_model = sorted(reg_model_info, key=lambda x: x.version, reverse=True)[0]
+            run_id = latest_reg_model.run_id
+            logging.info(f"Using run_id: {run_id} for preprocessor")
+            
+        except Exception as e:
+            logging.error(f"Error getting registered model info: {e}")
+            raise
         
         # Download preprocessor artifact
-        preprocessor_path = mlflow.artifacts.download_artifacts(
-            f"runs:/{run_id}/preprocessor/preprocessor.pkl"
-        )
-        import joblib
-        preprocessor = joblib.load(preprocessor_path)
+        try:
+            preprocessor_path = mlflow.artifacts.download_artifacts(
+                f"runs:/{run_id}/preprocessor/preprocessor.pkl"
+            )
+            preprocessor = joblib.load(preprocessor_path)
+            logging.info("✓ Preprocessor loaded successfully")
+        except Exception as e:
+            logging.error(f"Error loading preprocessor: {e}")
+            raise
         
-        logging.info("✓ Models loaded from MLflow Model Registry")
+        logging.info("✓ All models and preprocessor loaded from MLflow Model Registry")
         return regressor, classifier, preprocessor
+        
     except Exception as e:
         error_msg = f"Error loading models from MLflow: {e}"
-        st.error(error_msg)
         logging.error(error_msg)
-        raise CustomException(e, sys)
-        return None, None, None
+        raise Exception(error_msg)
 
 
 def load_models():
     """
-    Smart model loader that checks environment and loads from appropriate source.
-    Uses local files for development, MLflow for cloud deployment.
+    Smart model loader with priority: MLflow/DagsHub first, then local fallback.
+    This ensures cloud compatibility while maintaining local development support.
+    
+    Priority:
+    1. Try loading from MLflow Model Registry (DagsHub/Cloud)
+    2. Fall back to local files if MLflow fails
     
     Returns:
         tuple: (regressor, classifier, preprocessor)
@@ -184,13 +254,26 @@ def load_models():
     import os
     import streamlit as st
     
-    # Check if running on Streamlit Cloud
-    if os.getenv("STREAMLIT_CLOUD") == "true":
-        st.info("🌐 Loading models from MLflow (Cloud mode)...")
-        return load_models_from_mlflow()
-    else:
-        st.info("💻 Loading models from local files (Development mode)...")
-        return load_models_local()
+    # First, try loading from MLflow (priority for cloud compatibility)
+    try:
+        st.info("🌐 Attempting to load models from MLflow/DagsHub...")
+        regressor, classifier, preprocessor = load_models_from_mlflow()
+        st.success("✅ Models loaded from MLflow Model Registry")
+        return regressor, classifier, preprocessor
+    except Exception as mlflow_error:
+        logging.warning(f"MLflow loading failed: {mlflow_error}")
+        st.warning(f"⚠️ Could not load from MLflow: {str(mlflow_error)}")
+        
+        # Fall back to local files
+        try:
+            st.info("💻 Falling back to local model files...")
+            regressor, classifier, preprocessor = load_models_local()
+            st.success("✅ Models loaded from local artifacts")
+            return regressor, classifier, preprocessor
+        except Exception as local_error:
+            logging.error(f"Both MLflow and local loading failed. MLflow: {mlflow_error}, Local: {local_error}")
+            st.error("❌ Failed to load models from both MLflow and local files")
+            raise CustomException(local_error, sys)
 
 
 def validate_user_input(input_data):
@@ -301,10 +384,43 @@ def make_predictions(preprocessor, regressor, classifier, input_df):
             
         logging.info(f"Prediction features: {X_processed.shape[1]} (Num: {len(num_cols)}, Cat: {X_cat_encoded.shape[1]}, Rem: {len(remainder_cols)})")
         
+        # --- FIX FOR MLFLOW SCHEMA ENFORCEMENT ---
+        # MLflow models expect a DataFrame with specific column names, not a numpy array.
+        # We need to reconstruct the DataFrame with the correct feature names.
+        
+        # 1. Get OneHotEncoder feature names
+        try:
+            # Try to get feature names from the encoder if available
+            if hasattr(ohe, 'get_feature_names_out'):
+                encoded_cols = ohe.get_feature_names_out(cat_cols)
+            else:
+                # Fallback if get_feature_names_out is not available (older sklearn)
+                encoded_cols = []
+                for i, col in enumerate(cat_cols):
+                    categories = ohe.categories_[i]
+                    for cat in categories:
+                        encoded_cols.append(f"{col}_{cat}")
+        except Exception as e:
+            logging.warning(f"Could not get OHE feature names: {e}. Using generic names.")
+            encoded_cols = [f"cat_{i}" for i in range(X_cat_encoded.shape[1])]
+
+        # 2. Combine all feature names
+        all_feature_names = list(num_cols) + list(encoded_cols) + list(remainder_cols)
+        
+        # 3. Create DataFrame with correct names
+        X_processed_df = pd.DataFrame(X_processed, columns=all_feature_names)
+        
+        # Ensure column types are correct (MLflow is strict about types)
+        # Convert all to float to match the schema error message 'double (required)'
+        X_processed_df = X_processed_df.astype(float)
+        
+        logging.info(f"Created DataFrame for prediction with columns: {all_feature_names}")
+        # -----------------------------------------
+        
         # Classification prediction (eligibility)
         # Classes: 0=Eligible, 1=High_Risk, 2=Not_Eligible
-        eligibility_pred = classifier.predict(X_processed)[0]
-        eligibility_proba = classifier.predict_proba(X_processed)[0]
+        eligibility_pred = classifier.predict(X_processed_df)[0]
+        eligibility_proba = classifier.predict_proba(X_processed_df)[0]
         
         # Get probability of the predicted class
         confidence = float(eligibility_proba[eligibility_pred])
@@ -315,7 +431,7 @@ def make_predictions(preprocessor, regressor, classifier, input_df):
         
         # Regression prediction (EMI amount)
         # Only relevant if Eligible (0) or High_Risk (1) - arguably High_Risk might get a lower amount or higher interest
-        emi_amount = regressor.predict(X_processed)[0]
+        emi_amount = regressor.predict(X_processed_df)[0]
         
         return {
             "eligibility_class": int(eligibility_pred),

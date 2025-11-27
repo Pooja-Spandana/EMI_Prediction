@@ -9,3 +9,11 @@ font = "sans serif"
 maxUploadSize = 200
 enableCORS = false
 headless = true
+
+[ui]
+hideTopBar = false
+
+[client]
+showSidebarNavigation = true
+
+

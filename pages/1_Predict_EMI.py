@@ -52,6 +52,31 @@ st.markdown("""
 st.markdown('<div class="prediction-header">💰 EMI Prediction</div>', unsafe_allow_html=True)
 st.markdown("Get instant EMI eligibility assessment and maximum EMI amount prediction")
 
+# Information section in sidebar
+with st.sidebar:
+    st.markdown("### How It Works")
+    
+    st.markdown("""
+    **Step 1: Fill the Form**
+    - Enter your personal details 
+    - Provide employment & income information
+    - Add housing & family details
+    - List your monthly expenses
+    - Include financial status & credit score
+    - Specify loan requirements
+    """)
+    
+    st.markdown("---")
+    
+    st.markdown("""
+    **Step 2: Get Predictions**
+    - Click the "Predict EMI Eligibility" button
+    - Our AI models will analyze your data
+    - Receive instant eligibility status
+    - Get your maximum EMI amount
+    - Download your prediction report
+    """)
+
 st.markdown("---")
 
 # Load models with caching
@@ -331,24 +356,4 @@ Prediction Results:
                 mime="text/plain"
             )
 
-# Information section
-st.markdown("---")
-st.markdown("### ℹ️ How It Works")
 
-col1, col2 = st.columns(2)
-
-with col1:
-    st.markdown("""
-    **Classification Model (LightGBM):**
-    - Predicts EMI eligibility
-    - Classes: Eligible, High Risk, Not Eligible
-    - Accuracy: 97.16%
-    """)
-
-with col2:
-    st.markdown("""
-    **Regression Model (XGBoost):**
-    - Predicts maximum EMI amount
-    - R² Score: 0.9817
-    - RMSE: 996.55
-    """)
