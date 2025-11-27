@@ -28,21 +28,26 @@ st.markdown("""
     .explorer-header {
         font-size: 2.5rem;
         font-weight: bold;
-        color: #FF4B4B;
+        color: #3399FF;
         margin-bottom: 1rem;
+        text-align: center;
     }
     .stat-card {
         padding: 1rem;
         border-radius: 10px;
-        background-color: #f0f2f6;
+        background-color: #262730;
         text-align: center;
+    }
+    h3 {
+        color: #3399FF !important;
+        text-align: center !important;
     }
     </style>
 """, unsafe_allow_html=True)
 
 # Header
 st.markdown('<div class="explorer-header">📊 Data Explorer</div>', unsafe_allow_html=True)
-st.markdown("Explore the training dataset, visualize feature distributions, and analyze correlations.")
+st.markdown('<p style="text-align: center;">Explore the training dataset, visualize feature distributions, and analyze correlations.</p>', unsafe_allow_html=True)
 
 st.markdown("---")
 
@@ -59,39 +64,38 @@ def load_data():
         try:
             df = pd.read_csv(dagshub_raw_url)
             source = "Full Dataset (DagsHub/DVC)"
-        except Exception as dagshub_error:
-            # Fallback to local if DagsHub fails
-            if Path("Data/Raw/emi_prediction_dataset.csv").exists():
-                df = pd.read_csv("Data/Raw/emi_prediction_dataset.csv")
-                source = "Full Dataset (Local Fallback)"
-            else:
-                return None, f"Error loading from DagsHub: {str(dagshub_error)}"
+        except Exception:
+            # No local fallback as per request
+            return None, "Unable to load data right now, try again after a while."
             
         return df, source
     except Exception as e:
-        return None, str(e)
+        return None, "Unable to load data right now, try again after a while."
 
 with st.spinner("Loading dataset..."):
     df, source = load_data()
 
 # Add Download Button and Instructions
-st.sidebar.markdown("### 📥 Get Raw Data")
+st.sidebar.markdown("#### 📥 Get Raw Data")
 dagshub_url = "https://dagshub.com/Pooja-Spandana/EMI_Prediction/raw/main/Data/Raw/emi_prediction_dataset.csv"
-st.sidebar.link_button("Download Raw Dataset", dagshub_url)
+st.sidebar.link_button("Download Raw Dataset", dagshub_url, width='stretch')
 
+st.sidebar.markdown("#### ℹ️ Setup Instructions")
 st.sidebar.markdown("""
-    1. **Download** the raw dataset from the link above.
-    2. **Place** the file in `Data/Raw/emi_prediction_dataset.csv`.
-    3. **Run Data Ingestion**: ```python src/components/data_ingestion.py```
-    4. **Run Data Cleaning**: ```python src/components/data_cleaning.py```  
-    5. **Run Feature Engineering**: ```python src/components/feature_engineering.py```
-    """)
+1. **Download** the raw dataset
+2. **Place** in `Data/Raw/`
+3. **Run Pipeline**:
+```bash
+python src/components/data_ingestion.py
+python src/components/data_cleaning.py
+python src/components/feature_engineering.py
+```
+""")
     
 st.markdown("#### 📄 Raw Data Preview (Top 10 Rows)")
 try:
     if df is not None:
         st.dataframe(df.head(10), width='stretch')
-        st.caption(f"Showing top 10 rows from {source}")
 except Exception as e:
     st.warning(f"Could not load raw data preview: {e}")
 
@@ -102,7 +106,7 @@ if df is None:
 st.success(f"✅ Loaded {source} successfully! Shape: {df.shape}")
 
 # Dataset Overview
-st.markdown("### 📋 Dataset Overview")
+st.markdown("#### 📋 Dataset Overview")
 
 col1, col2, col3, col4 = st.columns(4)
 with col1:
@@ -119,7 +123,7 @@ with col4:
 st.markdown("---")
 
 # Visualizations
-st.markdown("### 📈 Feature Analysis")
+st.subheader("📈 Feature Analysis")
 
 tabs = st.tabs(["Univariate Analysis", "Bivariate Analysis", "Correlation"])
 
@@ -128,7 +132,7 @@ with tabs[0]:
     
     # Select numerical columns
     num_cols = df.select_dtypes(include=['float64', 'int64']).columns.tolist()
-    selected_num_col = st.selectbox("Select Feature to Visualize", num_cols, index=0)
+    selected_num_col = st.selectbox("Select Numerical Feature", num_cols, index=0)
     
     if selected_num_col:
         fig = px.histogram(df, x=selected_num_col, nbins=50, title=f"Distribution of {selected_num_col}",
@@ -139,6 +143,31 @@ with tabs[0]:
         st.markdown(f"**Statistics for {selected_num_col}:**")
         desc = df[selected_num_col].describe()
         st.dataframe(desc.to_frame().T, width='stretch')
+
+    st.markdown("---")
+    st.markdown("#### Distribution of Categorical Features")
+    
+    # Select categorical columns
+    cat_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
+    
+    if cat_cols:
+        selected_cat_col = st.selectbox("Select Categorical Feature", cat_cols, index=0)
+        
+        if selected_cat_col:
+            # Calculate counts
+            cat_counts = df[selected_cat_col].value_counts().reset_index()
+            cat_counts.columns = [selected_cat_col, 'Count']
+            
+            fig = px.bar(cat_counts, x=selected_cat_col, y='Count', 
+                        title=f"Distribution of {selected_cat_col}",
+                        color='Count', color_continuous_scale='Reds')
+            st.plotly_chart(fig, width='stretch')
+            
+            # Stats
+            st.markdown(f"**Statistics for {selected_cat_col}:**")
+            st.dataframe(cat_counts, width='stretch')
+    else:
+        st.info("No categorical features found in the dataset.")
 
 with tabs[1]:
     st.markdown("#### Relationship between Features")

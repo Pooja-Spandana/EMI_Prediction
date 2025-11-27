@@ -28,8 +28,9 @@ st.markdown("""
     .prediction-header {
         font-size: 2.5rem;
         font-weight: bold;
-        color: #FF4B4B;
+        color: #3399FF;
         margin-bottom: 1rem;
+        text-align: center;
     }
     .result-card {
         padding: 2rem;
@@ -50,7 +51,7 @@ st.markdown("""
 
 # Header
 st.markdown('<div class="prediction-header">💰 EMI Prediction</div>', unsafe_allow_html=True)
-st.markdown("Get instant EMI eligibility assessment and maximum EMI amount prediction")
+st.markdown('<div style="text-align: center;">Get instant EMI eligibility assessment and maximum EMI amount prediction</div>', unsafe_allow_html=True)
 
 # Information section in sidebar
 with st.sidebar:
@@ -91,8 +92,7 @@ try:
     if regressor is None or classifier is None or preprocessor is None:
         st.error("⚠️ Failed to load models. Please check the configuration and try again.")
         st.stop()
-    
-    st.success("✅ Models loaded successfully!")
+
 except CustomException as ce:
     st.error(f"⚠️ Model Loading Error: {str(ce)}")
     st.info("💡 **Troubleshooting Tips:**\n- Check if model files exist in `artifacts/models/`\n- Verify MLflow credentials in `.env` file\n- Ensure models are registered in MLflow Model Registry")
@@ -194,7 +194,7 @@ with st.form("prediction_form"):
     st.markdown("---")
     
     # Submit button
-    submitted = st.form_submit_button("🔮 Predict EMI Eligibility", width='stretch')
+    submitted = st.form_submit_button("Predict EMI Eligibility", width='stretch')
 
 # Process prediction
 if submitted:

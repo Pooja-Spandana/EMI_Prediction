@@ -18,15 +18,67 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
+# Custom CSS for consistent styling
+st.markdown("""
+    <style>
+    .performance-header {
+        font-size: 3rem;
+        font-weight: bold;
+        color: #3399FF;
+        text-align: center;
+        margin-bottom: 1rem;
+    }
+    .sub-header {
+        color: #3399FF;
+        text-align: center;
+    }
+    h1, h2, h3 {
+        color: #3399FF !important;
+        text-align: center !important;
+    }
+    </style>
+""", unsafe_allow_html=True)
+
 # Header
-st.title("📈 Model Performance Dashboard")
-st.markdown("---")
+st.markdown('<div class="performance-header">📈 Model Performance Dashboard</div>', unsafe_allow_html=True)
 
 # Introduction
-st.markdown("""
-This dashboard provides comprehensive insights into the performance of our EMI prediction models.
-Monitor key metrics, visualizations, and model behavior to ensure optimal performance.
+st.markdown("""<p class="sub-header">
+This dashboard provides comprehensive insights into the performance of our EMI prediction models.</p>
 """)
+st.markdown("""<p class="sub-header">Monitor key metrics, visualizations, and model behavior to ensure optimal performance.</p>
+""")
+
+st.markdown("---")
+
+# Model Information
+st.header("ℹ️ Model Information")
+
+col1, col2 = st.columns(2)
+
+with col1:
+    st.subheader("Model Dataset")
+    st.markdown("""
+    - **Total Samples:** ~4,00,000
+    - **Training Set:** 70%
+    - **Validation Set:** 15%
+    - **Test Set:** 15%
+    - **Features:** 42 input features (after going through preprocessor)
+    - **Target Variables:** 2 (Emi_Eligibility, Max_Monthly_Emi)
+    """)
+
+with col2:
+    st.subheader("Model Algorithms")
+    st.markdown("""
+    **Classification:**
+    - Feature engineering and scaling
+    - SMOTE for handling class imbalance
+    - LightGBM with hyperparameter tuning with RandomSearchCV
+    
+    **Regression:**
+    - Feature engineering and scaling
+    - XGBoost with hyperparameter tuning with RandomSearchCV
+    """)
 
 st.markdown("---")
 
@@ -38,7 +90,7 @@ col1, col2 = st.columns(2)
 with col1:
     st.subheader("Classification Model (LightGBM)")
     st.markdown("""
-    **Purpose:** Predict EMI eligibility (Approved/Rejected)
+    **Purpose:** Predict EMI eligibility (Not_Eligible, Eligible, High_Risk)
     
     **Key Metrics:**
     - Accuracy: 97.16%
@@ -51,7 +103,7 @@ with col1:
 with col2:
     st.subheader("Regression Model (XGBoost)")
     st.markdown("""
-    **Purpose:** Predict maximum EMI amount
+    **Purpose:** Predict maximum EMI amount per month
     
     **Key Metrics:**
     - R² Score: 0.9817
@@ -59,45 +111,6 @@ with col2:
     - MAE: 612.89
     - MAPE: 8.23%
     """)
-
-st.markdown("---")
-
-# Performance Metrics
-st.header("📊 Detailed Performance Metrics")
-
-tab1, tab2 = st.tabs(["Classification Model", "Regression Model"])
-
-with tab1:
-    st.subheader("Classification Model Performance")
-    
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric("Accuracy", "97.16%", delta="2.3%")
-    with col2:
-        st.metric("Precision", "0.9712", delta="0.015")
-    with col3:
-        st.metric("Recall", "0.9703", delta="0.012")
-    with col4:
-        st.metric("F1-Score", "0.9707", delta="0.014")
-    
-    st.info("📌 **Note:** To view confusion matrices, ROC curves, and feature importance plots, please check the MLflow tracking server or the Reports directory.")
-
-with tab2:
-    st.subheader("Regression Model Performance")
-    
-    col1, col2, col3, col4 = st.columns(4)
-    
-    with col1:
-        st.metric("R² Score", "0.9817", delta="0.023")
-    with col2:
-        st.metric("RMSE", "996.55", delta="-45.2")
-    with col3:
-        st.metric("MAE", "612.89", delta="-28.5")
-    with col4:
-        st.metric("MAPE", "8.23%", delta="-1.2%")
-    
-    st.info("📌 **Note:** To view residual plots, prediction vs actual plots, and feature importance, please check the MLflow tracking server or the Reports directory.")
 
 st.markdown("---")
 
@@ -114,36 +127,6 @@ Our models are tracked using MLflow for comprehensive experiment management:
 
 To access the MLflow UI, please refer to the project documentation for the tracking server URL.
 """)
-
-st.markdown("---")
-
-# Model Information
-st.header("ℹ️ Model Information")
-
-col1, col2 = st.columns(2)
-
-with col1:
-    st.subheader("Training Dataset")
-    st.markdown("""
-    - **Total Samples:** 252,000
-    - **Training Set:** 70%
-    - **Validation Set:** 15%
-    - **Test Set:** 15%
-    - **Features:** 11 input features
-    - **Target Variables:** 2 (Eligibility, EMI Amount)
-    """)
-
-with col2:
-    st.subheader("Model Algorithms")
-    st.markdown("""
-    **Classification:**
-    - LightGBM with hyperparameter tuning
-    - SMOTE for handling class imbalance
-    
-    **Regression:**
-    - XGBoost with hyperparameter tuning
-    - Feature engineering and scaling
-    """)
 
 st.markdown("---")
 
