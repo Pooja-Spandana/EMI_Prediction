@@ -5,24 +5,8 @@
 [![MLflow](https://img.shields.io/badge/MLflow-Tracking-0194E2?logo=mlflow)](https://mlflow.org/)
 [![DagsHub](https://img.shields.io/badge/DagsHub-Integration-blue)](https://dagshub.com/)
 
-A comprehensive **financial risk assessment platform** that leverages advanced machine learning models to predict EMI (Equated Monthly Installment) eligibility and maximum affordable EMI amounts. Built with **Streamlit**, **MLflow**, and **DagsHub** for seamless model tracking and deployment.
 
----
-
-## 🎯 Overview
-
-The **EMI Prediction Platform** addresses two critical financial assessment problems:
-
-1. **Classification**: Predict EMI eligibility status (Eligible, High Risk, Not Eligible)
-2. **Regression**: Estimate the maximum monthly EMI amount a customer can afford
-
-This platform is designed for financial institutions, lending platforms, and individuals to make data-driven decisions about loan eligibility and affordability.
-
----
-
-## ✨ App Features
-
-### Live Application - **[Launch App](https://emiprediction.streamlit.app/)** 
+### Streamlit Application 
 
 ### 🔮 Real-Time Predictions
 - **Dual ML Models**: LightGBM for classification (97.16% accuracy) and XGBoost for regression (R² = 0.9817)
@@ -178,23 +162,33 @@ This section outlines the complete data pipeline and methodology used to transfo
   4. Generate predictions using both models
   5. Return eligibility status + maximum EMI amount
 
-### 📊 Data Flow Diagram
+---
 
-```
-Raw Data (400K records)
-    ↓
-[Data Ingestion] → Train/Val/Test Split (70/15/15)
-    ↓
-[Data Cleaning] → Handle missing values, outliers
-    ↓
-[Feature Engineering] → Create 42 features
-    ↓
-[Model Training] → XGBoost (Regression) + LightGBM (Classification)
-    ↓
-[MLflow Logging] → Track experiments, register models and preprocessor
-    ↓
-[Deployment] → Streamlit Cloud + MLflow Model Registry
-```
+## 📊 Model Performance
+
+### Classification Model (LightGBM)
+| Metric        | Score  |
+| ------------- | ------ |
+| **Accuracy**  | 97.16% |
+| **Precision** | 0.9712 |
+| **Recall**    | 0.9703 |
+| **F1-Score**  | 0.9707 |
+| **ROC-AUC**   | 0.9945 |
+
+### Regression Model (XGBoost)
+| Metric       | Score  |
+| ------------ | ------ |
+| **R² Score** | 0.9817 |
+| **RMSE**     | 996.55 |
+| **MAE**      | 612.89 |
+| **MAPE**     | 8.23%  |
+
+---
+
+### 🔗 Quick Links
+- **Live App**: [https://emiprediction.streamlit.app](https://emiprediction.streamlit.app)
+- **DagsHub Repository**: [https://dagshub.com/Pooja-Spandana/EMI_Prediction](https://dagshub.com/Pooja-Spandana/EMI_Prediction)
+- **MLflow Experiments**: [View Experiment Tracking](https://dagshub.com/Pooja-Spandana/EMI_Prediction.mlflow/#/compare-experiments/s?experiments=%5B%220%22%2C%222%22%5D&searchFilter=&orderByKey=attributes.start_time&orderByAsc=false&startTime=ALL&lifecycleFilter=Active&modelVersionFilter=All+Runs&datasetsFilter=W10%3D)
 
 ---
 
@@ -219,27 +213,6 @@ Raw Data (400K records)
 ### Deployment
 - **Streamlit Cloud** - Cloud hosting and deployment
 - **GitHub** - Version control and CI/CD
-
----
-
-## 📊 Model Performance
-
-### Classification Model (LightGBM)
-| Metric        | Score  |
-| ------------- | ------ |
-| **Accuracy**  | 97.16% |
-| **Precision** | 0.9712 |
-| **Recall**    | 0.9703 |
-| **F1-Score**  | 0.9707 |
-| **ROC-AUC**   | 0.9945 |
-
-### Regression Model (XGBoost)
-| Metric       | Score  |
-| ------------ | ------ |
-| **R² Score** | 0.9817 |
-| **RMSE**     | 996.55 |
-| **MAE**      | 612.89 |
-| **MAPE**     | 8.23%  |
 
 ---
 
