@@ -6,9 +6,29 @@ from exception import CustomException
 import sys
 from dotenv import load_dotenv
 import os
+import streamlit as st
 
 # Load environment variables
 load_dotenv()
+
+# Helper function to get environment variables (works both locally and on Streamlit Cloud)
+def get_env(key, default=None):
+    """
+    Get environment variable from Streamlit secrets (cloud) or .env file (local).
+    
+    Args:
+        key: Environment variable name
+        default: Default value if not found
+        
+    Returns:
+        Environment variable value or default
+    """
+    # Try Streamlit secrets first (for cloud deployment)
+    try:
+        return st.secrets[key]
+    except:
+        # Fall back to environment variables (for local development)
+        return os.getenv(key, default)
 
 # Function to ensures the parent directory for a given file path exists
 def ensure_parent_dir(path):
@@ -151,7 +171,7 @@ def load_models_from_mlflow():
     
     try:
         # Set MLflow tracking URI from environment variable
-        tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
+        tracking_uri = get_env("MLFLOW_TRACKING_URI")
         if not tracking_uri:
             raise ValueError("MLFLOW_TRACKING_URI environment variable not set")
         

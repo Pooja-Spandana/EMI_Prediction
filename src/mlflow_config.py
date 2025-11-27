@@ -10,6 +10,7 @@ import mlflow
 import mlflow.sklearn
 from dotenv import load_dotenv
 from pathlib import Path
+from utils import get_env
 
 # Load environment variables from .env file in project root
 project_root = Path(__file__).parent.parent
@@ -22,10 +23,10 @@ class MLflowConfig:
     
     def __init__(self):
         """Initialize MLflow configuration with DagsHub credentials."""
-        self.dagshub_username = os.getenv("DAGSHUB_USERNAME")
-        self.dagshub_repo = os.getenv("DAGSHUB_REPO_NAME")
-        self.dagshub_token = os.getenv("DAGSHUB_TOKEN")
-        self.tracking_uri = os.getenv("MLFLOW_TRACKING_URI")
+        self.dagshub_username = get_env("DAGSHUB_USERNAME")
+        self.dagshub_repo = get_env("DAGSHUB_REPO_NAME")
+        self.dagshub_token = get_env("DAGSHUB_TOKEN")
+        self.tracking_uri = get_env("MLFLOW_TRACKING_URI")
         
         # Validate credentials
         if not all([self.dagshub_username, self.dagshub_repo, self.dagshub_token, self.tracking_uri]):
