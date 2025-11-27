@@ -68,7 +68,7 @@ This section outlines the complete data pipeline and methodology used to transfo
 
 **Objective**: Create meaningful features and prepare data for modeling
 
-- **Input**: Data/Interim/cleaned_data.csv`
+- **Input**: `Data/Interim/cleaned_data.csv`
 - **Process**:
   - **Derived Features**:
     - Feature engineered 7 new features
