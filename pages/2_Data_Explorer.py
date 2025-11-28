@@ -67,9 +67,11 @@ def load_data():
             
             # Fix data types to prevent PyArrow serialization errors
             # Convert numeric columns that might have mixed types
-            numeric_cols = ['age', 'income', 'loan_amount_request', 'current_loan_expenses', 
-                          'credit_score', 'property_age', 'property_price', 'co_applicant_income',
-                          'loan_tenure_months', 'emi_max_monthly']
+            numeric_cols = ['monthly_salary', 'years_of_employment', 'monthly_rent', 'family_size',
+                          'dependents', 'school_fees', 'college_fees', 'travel_expenses',
+                          'groceries_utilities', 'other_monthly_expenses', 'current_emi_amount',
+                          'bank_balance', 'emergency_fund', 'requested_amount', 'requested_tenure',
+                          'max_monthly_emi']
             
             for col in numeric_cols:
                 if col in df.columns:
