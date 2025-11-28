@@ -55,7 +55,7 @@ st.markdown('<div class="sub-header">Intelligent Financial Risk Assessment with 
 # Introduction
 st.markdown("""
 <div style="text-align: center;">
-This application leverages advanced machine learning models to provide accurate EMI eligibility predictions and maximum EMI amount calculations.</div>
+This application leverages advanced ML models to provide accurate EMI eligibility predictions and maximum EMI amount calculations.</div>
 """, unsafe_allow_html=True)
 st.markdown("""
 <div style="text-align: center;">Built with state-of-the-art algorithms and integrated with MLflow for model tracking and management.

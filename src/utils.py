@@ -201,19 +201,21 @@ def load_models_from_mlflow():
             client = mlflow.tracking.MlflowClient()
             
             try:
-                # Get latest version for Regressor
-                reg_versions = client.get_latest_versions("emi_max_monthly_predictor", stages=["None"])
+                # Get latest version for Regressor (using new API)
+                reg_versions = client.search_model_versions("name='emi_max_monthly_predictor'")
                 if not reg_versions:
                     raise Exception("No versions found for emi_max_monthly_predictor")
-                reg_version = reg_versions[0].version
+                # Sort by version number to get the latest
+                reg_version = sorted(reg_versions, key=lambda x: int(x.version), reverse=True)[0].version
                 regressor = mlflow.sklearn.load_model(f"models:/emi_max_monthly_predictor/{reg_version}")
                 logging.info(f"✓ Regressor loaded from version {reg_version}")
 
-                # Get latest version for Classifier
-                cls_versions = client.get_latest_versions("emi_eligibility_classifier", stages=["None"])
+                # Get latest version for Classifier (using new API)
+                cls_versions = client.search_model_versions("name='emi_eligibility_classifier'")
                 if not cls_versions:
                     raise Exception("No versions found for emi_eligibility_classifier")
-                cls_version = cls_versions[0].version
+                # Sort by version number to get the latest
+                cls_version = sorted(cls_versions, key=lambda x: int(x.version), reverse=True)[0].version
                 classifier = mlflow.sklearn.load_model(f"models:/emi_eligibility_classifier/{cls_version}")
                 logging.info(f"✓ Classifier loaded from version {cls_version}")
                 
@@ -229,9 +231,9 @@ def load_models_from_mlflow():
             # We can get run_id from the model metadata if available, or query registry again
             # Let's query registry for the version we just loaded
             client = mlflow.tracking.MlflowClient()
-            reg_model_info = client.get_latest_versions("emi_max_monthly_predictor", stages=["None", "Production", "Staging"])
-            # Sort by version to get the one we likely loaded (simplification)
-            latest_reg_model = sorted(reg_model_info, key=lambda x: x.version, reverse=True)[0]
+            reg_model_info = client.search_model_versions("name='emi_max_monthly_predictor'")
+            # Sort by version to get the one we likely loaded
+            latest_reg_model = sorted(reg_model_info, key=lambda x: int(x.version), reverse=True)[0]
             run_id = latest_reg_model.run_id
             logging.info(f"Using run_id: {run_id} for preprocessor")
             

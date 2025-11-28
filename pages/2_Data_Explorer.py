@@ -62,7 +62,20 @@ def load_data():
         # Load Full Dataset from DagsHub (DVC Tracked)
         dagshub_raw_url = "https://dagshub.com/Pooja-Spandana/EMI_Prediction/raw/main/Data/Raw/emi_prediction_dataset.csv"
         try:
-            df = pd.read_csv(dagshub_raw_url)
+            # Load with low_memory=False to avoid DtypeWarning
+            df = pd.read_csv(dagshub_raw_url, low_memory=False)
+            
+            # Fix data types to prevent PyArrow serialization errors
+            # Convert numeric columns that might have mixed types
+            numeric_cols = ['age', 'income', 'loan_amount_request', 'current_loan_expenses', 
+                          'credit_score', 'property_age', 'property_price', 'co_applicant_income',
+                          'loan_tenure_months', 'emi_max_monthly']
+            
+            for col in numeric_cols:
+                if col in df.columns:
+                    # Convert to numeric, coercing errors to NaN
+                    df[col] = pd.to_numeric(df[col], errors='coerce')
+            
             source = "Full Dataset (DagsHub/DVC)"
         except Exception:
             # No local fallback as per request
