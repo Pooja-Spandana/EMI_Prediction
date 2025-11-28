@@ -43,10 +43,10 @@ st.markdown("""
 st.markdown('<div class="performance-header">📈 Model Performance Dashboard</div>', unsafe_allow_html=True)
 
 # Introduction
-st.markdown("""<p class="sub-header">
+st.markdown("""<p style="text-align: center;">
 This dashboard provides comprehensive insights into the performance of our EMI prediction models.</p>
 """)
-st.markdown("""<p class="sub-header">Monitor key metrics, visualizations, and model behavior to ensure optimal performance.</p>
+st.markdown("""<p style="text-align: center;">Monitor key metrics, visualizations, and model behavior to ensure optimal performance.</p>
 """)
 
 st.markdown("---")
