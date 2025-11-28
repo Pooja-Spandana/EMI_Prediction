@@ -5,8 +5,52 @@
 [![MLflow](https://img.shields.io/badge/MLflow-Tracking-0194E2?logo=mlflow)](https://mlflow.org/)
 [![DagsHub](https://img.shields.io/badge/DagsHub-Integration-blue)](https://dagshub.com/)
 
+---
 
-### Streamlit Application 
+## 🎯 Problem Statement
+
+Build a comprehensive financial risk assessment platform that integrates machine learning models with MLflow experiment tracking to create an interactive web application for EMI prediction.
+
+**The Challenge**: Nowadays, people struggle to pay EMI due to poor financial planning and inadequate risk assessment. This project aims to solve this critical issue by providing data-driven insights for better loan decisions.
+
+### Key Objectives
+- 🎯 **Automate Risk Assessment**: Replace manual underwriting with AI-powered predictions
+- 📊 **Data-Driven Decisions**: Provide transparent, quantifiable loan eligibility metrics
+- ⚡ **Real-Time Processing**: Instant EMI predictions for improved customer experience
+- 🔍 **Dual Prediction Models**: 
+  - **Classification**: Determine EMI eligibility status (Eligible/Not Eligible/Review Required)
+  - **Regression**: Predict maximum affordable monthly EMI amount
+
+---
+
+## 💼 Business Use Cases
+
+### 🏦 Financial Institutions
+- **Automated Loan Approval**: Reduce manual underwriting time by **80%** through AI-powered risk assessment
+- **Risk-Based Pricing**: Implement dynamic pricing strategies for different EMI scenarios based on applicant profiles
+- **Real-Time Eligibility**: Instant assessment for walk-in customers, improving customer satisfaction and reducing wait times
+
+### 📱 FinTech Companies
+- **Digital Lending Platforms**: Integrate instant EMI eligibility checks into mobile and web applications
+- **Pre-Qualification Services**: Offer seamless pre-qualification services without manual intervention
+- **Automated Risk Scoring**: Generate comprehensive risk scores for loan applications in real-time
+- **API Integration**: Easily integrate prediction models into existing fintech ecosystems
+
+### 🏛️ Banks and Credit Agencies
+- **Data-Driven Recommendations**: Provide loan amount recommendations based on financial capacity and risk profile
+- **Portfolio Risk Management**: Predict potential defaults and manage portfolio risk proactively
+- **Regulatory Compliance**: Maintain documented, transparent decision processes for regulatory audits
+- **Credit Scoring**: Enhance traditional credit scoring with ML-powered insights
+
+### 👨‍💼 Loan Officers and Underwriters
+- **AI-Powered Recommendations**: Get instant AI recommendations for loan approval decisions
+- **Comprehensive Analysis**: Access complete financial profile analysis in seconds instead of hours
+- **Performance Tracking**: Monitor model accuracy and historical performance through MLflow dashboards
+- **Decision Support**: Use confidence scores and prediction explanations to make informed decisions
+
+---
+
+## ✨ Streamlit Application - Key Features
 
 ### 🔮 Real-Time Predictions
 - **Dual ML Models**: LightGBM for classification (97.16% accuracy) and XGBoost for regression (R² = 0.9817)
@@ -31,7 +75,7 @@
 
 ---
 
-## � Approach: From Raw Data to Model-Ready Datasets
+## 🔄 Approach: From Raw Data to Model-Ready Datasets
 
 This section outlines the complete data pipeline and methodology used to transform raw financial data into production-ready machine learning models.
 
@@ -44,13 +88,13 @@ This section outlines the complete data pipeline and methodology used to transfo
   - Load raw CSV data
   - Perform basic data type validation
 - **Output**: 
-  - `Data/Interim/ingested_raw.csv`
+  - `artifacts/ingested_raw.csv`
 
 ### 2️⃣ Data Cleaning (`data_cleaning.py`)
 
 **Objective**: Handle missing values, outliers, and data quality issues
 
-- **Input**: `Data/Interim/ingested_raw.csv`
+- **Input**: `artifacts/ingested_raw.csv`
 - **Process**:
   - **Missing Value Imputation**:
     - Dropped missing values
@@ -96,17 +140,13 @@ This section outlines the complete data pipeline and methodology used to transfo
 **Objective**: Predict maximum monthly EMI amount
 
 - **Algorithm**: XGBoost Regressor
-- **Hyperparameter Tuning**: RandomizedSearchCV with 3-fold cross-validation
-- **Key Parameters**:
-  - `n_estimators`: [100, 200, 300]
-  - `max_depth`: [3, 5, 7, 10]
-  - `learning_rate`: [0.01, 0.05, 0.1]
-  - `subsample`: [0.8, 0.9, 1.0]
-- **Evaluation Metrics**:
-  - R² Score: 0.9817
-  - RMSE: 996.55
-  - MAE: 612.89
-  - MAPE: 8.23%
+- **Hyperparameter Tuning**: RandomizedSearchCV with 3-fold cross-validation (20 iterations)
+- **Search Space**:
+  - `n_estimators`: [100, 200, 300, 500]
+  - `max_depth`: [3, 5, 7, 9]
+  - `learning_rate`: [0.01, 0.05, 0.1, 0.2]
+  - `subsample`: [0.6, 0.8, 1.0]
+  - `colsample_bytree`: [0.6, 0.8, 1.0]
 
 #### B. Classification Model Training (`cls_trainer.py`)
 
@@ -114,34 +154,35 @@ This section outlines the complete data pipeline and methodology used to transfo
 
 - **Algorithm**: LightGBM Classifier
 - **Class Imbalance Handling**: SMOTE (Synthetic Minority Over-sampling Technique)
-- **Hyperparameter Tuning**: RandomizedSearchCV with stratified 3-fold CV
-- **Key Parameters**:
-  - `n_estimators`: [100, 200, 300]
-  - `max_depth`: [3, 5, 7]
-  - `learning_rate`: [0.01, 0.05, 0.1]
-  - `num_leaves`: [31, 50, 70]
-- **Evaluation Metrics**:
-  - Accuracy: 97.16%
-  - Precision: 0.9712
-  - Recall: 0.9703
-  - F1-Score: 0.9707
-  - ROC-AUC: 0.9945
+- **Hyperparameter Tuning**: RandomizedSearchCV with stratified 3-fold CV (20 iterations)
+- **Search Space**:
+  - `n_estimators`: [100, 200, 300, 500]
+  - `max_depth`: [10, 20, 30, -1]
+  - `learning_rate`: [0.01, 0.05, 0.1, 0.2]
+  - `num_leaves`: [31, 50, 70, 100]
+  - `subsample`: [0.6, 0.8, 1.0]
+  - `colsample_bytree`: [0.6, 0.8, 1.0]
 
 #### C. Final Model Training (`final_trainer.py`)
 
-**Objective**: Train final models on combined train+validation data
+**Objective**: Train final models on combined train+validation data and evaluate on test set
 
 - **Process**:
-  - Combine train and validation sets for final training
-  - Use best hyperparameters from tuning phase
-  - Evaluate on held-out test set
-  - Log all metrics, parameters, and artifacts to MLflow
-  - Register models in MLflow Model Registry
+  - Load best hyperparameters from `reg_trainer.py` and `cls_trainer.py`
+  - Combine train and validation sets (70% + 15% = 85% of data)
+  - Apply SMOTE for classification model
+  - Train final models with best parameters
+  - Evaluate on held-out test set (15% of data)
+  - Log all metrics (train + test), parameters, and artifacts to MLflow
+  - Register models in MLflow Model Registry if thresholds are met
 - **Artifacts Saved**:
-  - Trained models: `artifacts/models/`
-  - Best parameters: `artifacts/best_params/`
-  - Preprocessor: `artifacts/preprocessor/`
-  - Confusion matrices, feature importance plots
+  - Trained models: `artifacts/models/final_regressor.pkl` and `final_classifier.pkl`
+  - Test predictions: `artifacts/predictions/`
+  - Confusion matrix: `artifacts/predictions/confusion_matrix.png`
+  - Preprocessor: `artifacts/preprocessor/preprocessor.pkl`
+- **Model Registration Thresholds**:
+  - Regression: RMSE < 2000
+  - Classification: Accuracy > 0.90
 
 ### 5️⃣ Model Deployment Pipeline
 
@@ -164,7 +205,9 @@ This section outlines the complete data pipeline and methodology used to transfo
 
 ---
 
-## 📊 Model Performance
+## 📊 Model Performance (Test Set Metrics)
+
+> **Note**: These metrics are from the final models trained on combined train+validation data (85%) and evaluated on the held-out test set (15%) using `final_trainer.py`.
 
 ### Classification Model (LightGBM)
 | Metric        | Score  |
@@ -192,7 +235,7 @@ This section outlines the complete data pipeline and methodology used to transfo
 
 ---
 
-## �🛠️ Tech Stack
+## 🛠️ Tech Stack
 
 ### Machine Learning
 - **XGBoost** - Regression model for EMI amount prediction
